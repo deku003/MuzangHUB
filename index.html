@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #00FF00; }
+        #videoContainer { display: none; }
+        video { width: 100%; max-width: 800px; }
+        form { margin: 20px; }
+        input, button { margin: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Upload Video</h2>
+    <form id="uploadForm">
+        <label for="name">Enter Your Name:</label>
+        <input type="text" id="name" required>
+        <input type="file" id="videoFile" accept="video/*" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="videoContainer">
+        <h3 id="displayName"></h3>
+        <video id="videoPlayer" controls autoplay></video>
+    </div>
+
+    <script>
+        document.getElementById("uploadForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let name = document.getElementById("name").value;
+            let file = document.getElementById("videoFile").files[0];
+            
+            if (name && file) {
+                let videoURL = URL.createObjectURL(file);
+                document.getElementById("displayName").innerText = "Uploaded by: " + name;
+                let videoPlayer = document.getElementById("videoPlayer");
+                videoPlayer.src = videoURL;
+
+                // Show video container
+                document.getElementById("videoContainer").style.display = "block";
+
+                // Prepare for chunked upload
+                let chunkSize = 1024 * 1024; // 1 MB per chunk
+                let totalChunks = Math.ceil(file.size / chunkSize);
+                let chunkIndex = 0;
+
+                // Upload each chunk
+                function uploadChunk() {
+                    let start = chunkIndex * chunkSize;
+                    let end = Math.min(start + chunkSize, file.size);
+                    let chunk = file.slice(start, end);
+                    let formData = new FormData();
+                    formData.append('file', chunk);
+                    formData.append('fileName', file.name);
+                    formData.append('chunkIndex', chunkIndex);
+                    formData.append('totalChunks', totalChunks);
+
+                    fetch('https://your-backend-url.onrender.com/upload-chunk', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(`Uploaded chunk ${chunkIndex + 1} of ${totalChunks}`);
+                        chunkIndex++;
+                        if (chunkIndex < totalChunks) {
+                            uploadChunk(); // Upload the next chunk
+                        } else {
+                            alert('Upload complete!');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Upload failed', error);
+                    });
+                }
+
+                // Start uploading chunks
+                uploadChunk();
+
+                // Do not hide the form (the form stays visible throughout)
+                document.getElementById("uploadForm").style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>
