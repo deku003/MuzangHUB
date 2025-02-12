@@ -57,7 +57,7 @@
                     formData.append('chunkIndex', chunkIndex);
                     formData.append('totalChunks', totalChunks);
 
-                    fetch('https://https://muzanghub.onrender.com/upload-chunk', {
+                    fetch('https://muzanghub.onrender.com/upload-chunk', {  // Correct URL
                         method: 'POST',
                         body: formData
                     })
@@ -87,7 +87,7 @@
                     console.log("Video finished playing.");
 
                     // Send request to server to delete the video
-                    fetch(`https://https://muzanghub.onrender.com/delete-video?fileName=${file.name}`, {
+                    fetch(`https://muzanghub.onrender.com/delete-video?fileName=${file.name}`, {  // Correct URL
                         method: 'DELETE'
                     })
                     .then(response => response.json())
